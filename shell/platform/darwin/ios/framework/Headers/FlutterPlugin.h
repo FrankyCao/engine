@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol FlutterPluginRegistry;
 
 #pragma mark -
-/***************************************************************************************************
+/**
  * Protocol for listener of events from the UIApplication, typically a FlutterPlugin.
  */
 @protocol FlutterApplicationLifeCycleDelegate
@@ -165,7 +165,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 #pragma mark -
-/***************************************************************************************************
+/**
  * A plugin registration callback.
  *
  * Used for registering plugins with additional instances of
@@ -176,7 +176,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef void (*FlutterPluginRegistrantCallback)(NSObject<FlutterPluginRegistry>* registry);
 
 #pragma mark -
-/***************************************************************************************************
+/**
  * Implemented by the iOS part of a Flutter plugin.
  *
  * Defines a set of optional callback methods and a method to set up the plugin
@@ -239,14 +239,40 @@ typedef void (*FlutterPluginRegistrantCallback)(NSObject<FlutterPluginRegistry>*
 @end
 
 #pragma mark -
-/***************************************************************************************************
- *Registration context for a single `FlutterPlugin`, providing a one stop shop
- *for the plugin to access contextual information and register callbacks for
- *various application events.
+/**
+ * How the UIGestureRecognizers of a platform view are blocked.
  *
- *Registrars are obtained from a `FlutterPluginRegistry` which keeps track of
- *the identity of registered plugins and provides basic support for cross-plugin
- *coordination.
+ * UIGestureRecognizers of platform views can be blocked based on decisions made by the
+ * Flutter Framework (e.g. When an interact-able widget is covering the platform view).
+ */
+typedef enum {
+  /**
+   * Flutter blocks all the UIGestureRecognizers on the platform view as soon as it
+   * decides they should be blocked.
+   *
+   * With this policy, only the `touchesBegan` method for all the UIGestureRecognizers is guaranteed
+   * to be called.
+   */
+  FlutterPlatformViewGestureRecognizersBlockingPolicyEager,
+  /**
+   * Flutter blocks the platform view's UIGestureRecognizers from recognizing only after
+   * touchesEnded was invoked.
+   *
+   * This results in the platform view's UIGestureRecognizers seeing the entire touch sequence,
+   * but never recognizing the gesture (and never invoking actions).
+   */
+  FlutterPlatformViewGestureRecognizersBlockingPolicyWaitUntilTouchesEnded,
+} FlutterPlatformViewGestureRecognizersBlockingPolicy;
+
+#pragma mark -
+/**
+ * Registration context for a single `FlutterPlugin`, providing a one stop shop
+ * for the plugin to access contextual information and register callbacks for
+ * various application events.
+ *
+ * Registrars are obtained from a `FlutterPluginRegistry` which keeps track of
+ * the identity of registered plugins and provides basic support for cross-plugin
+ * coordination.
  */
 @protocol FlutterPluginRegistrar <NSObject>
 /**
@@ -276,6 +302,23 @@ typedef void (*FlutterPluginRegistrantCallback)(NSObject<FlutterPluginRegistry>*
  */
 - (void)registerViewFactory:(NSObject<FlutterPlatformViewFactory>*)factory
                      withId:(NSString*)factoryId;
+
+/**
+ * Registers a `FlutterPlatformViewFactory` for creation of platform views.
+ *
+ * Plugins can expose a `UIView` for embedding in Flutter apps by registering a view factory.
+ *
+ * @param factory The view factory that will be registered.
+ * @param factoryId A unique identifier for the factory, the Dart code of the Flutter app can use
+ *   this identifier to request creation of a `UIView` by the registered factory.
+ * @param gestureRecognizersBlockingPolicy How UIGestureRecognizers on the platform views are
+ * blocked.
+ *
+ */
+- (void)registerViewFactory:(NSObject<FlutterPlatformViewFactory>*)factory
+                              withId:(NSString*)factoryId
+    gestureRecognizersBlockingPolicy:
+        (FlutterPlatformViewGestureRecognizersBlockingPolicy)gestureRecognizersBlockingPolicy;
 
 /**
  * Publishes a value for external use of the plugin.
@@ -330,7 +373,7 @@ typedef void (*FlutterPluginRegistrantCallback)(NSObject<FlutterPluginRegistry>*
 @end
 
 #pragma mark -
-/***************************************************************************************************
+/**
  * A registry of Flutter iOS plugins.
  *
  * Plugins are identified by unique string keys, typically the name of the
@@ -376,7 +419,7 @@ typedef void (*FlutterPluginRegistrantCallback)(NSObject<FlutterPluginRegistry>*
 @end
 
 #pragma mark -
-/***************************************************************************************************
+/**
  * Implement this in the `UIAppDelegate` of your app to enable Flutter plugins to register
  * themselves to the application life cycle events.
  *
@@ -387,6 +430,12 @@ typedef void (*FlutterPluginRegistrantCallback)(NSObject<FlutterPluginRegistry>*
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
     <UNUserNotificationCenterDelegate>
 #endif
+
+/**
+ * Called when registering a new `FlutterApplicaitonLifeCycleDelegate`.
+ *
+ * See also: `-[FlutterAppDelegate addApplicationLifeCycleDelegate:]`
+ */
 - (void)addApplicationLifeCycleDelegate:(NSObject<FlutterApplicationLifeCycleDelegate>*)delegate;
 @end
 

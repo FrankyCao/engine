@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 // Synced 2019-05-30T14:20:57.841444.
 
+// @dart = 2.6
 part of ui;
 
 /// Signature of callbacks that have no arguments and return no data.
@@ -477,19 +478,17 @@ class Locale {
   int get hashCode => hashValues(languageCode, scriptCode, countryCode);
 
   @override
-  String toString() {
-    final StringBuffer out = StringBuffer(languageCode);
-    if (scriptCode != null) {
-      out.write('_$scriptCode');
-    }
-    if (_countryCode != null) {
-      out.write('_$countryCode');
-    }
-    return out.toString();
-  }
+  String toString() => _rawToString('_');
 
   // TODO(yjbanov): implement to match flutter native.
-  String toLanguageTag() => '_';
+  String toLanguageTag() => _rawToString('-');
+
+  String _rawToString(String separator) {
+    final StringBuffer out = StringBuffer(languageCode);
+    if (scriptCode != null) out.write('$separator$scriptCode');
+    if (_countryCode != null) out.write('$separator$countryCode');
+    return out.toString();
+  }
 }
 
 /// The most basic interface to the host operating system's user interface.
@@ -995,6 +994,7 @@ class AccessibilityFeatures {
   static const int _kDisableAnimationsIndex = 1 << 2;
   static const int _kBoldTextIndex = 1 << 3;
   static const int _kReduceMotionIndex = 1 << 4;
+  static const int _kHighContrastIndex = 1 << 5;
 
   // A bitfield which represents each enabled feature.
   final int _index;
@@ -1022,6 +1022,11 @@ class AccessibilityFeatures {
   /// Only supported on iOS.
   bool get reduceMotion => _kReduceMotionIndex & _index != 0;
 
+  /// The platform is requesting that UI be rendered with darker colors.
+  ///
+  /// Only supported on iOS.
+  bool get highContrast => _kHighContrastIndex & _index != 0;
+
   @override
   String toString() {
     final List<String> features = <String>[];
@@ -1039,6 +1044,9 @@ class AccessibilityFeatures {
     }
     if (reduceMotion) {
       features.add('reduceMotion');
+    }
+    if (highContrast) {
+      features.add('highContrast');
     }
     return 'AccessibilityFeatures$features';
   }

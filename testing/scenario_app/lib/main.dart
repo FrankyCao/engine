@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// @dart = 2.6
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
@@ -13,6 +14,7 @@ import 'src/animated_color_square.dart';
 import 'src/platform_view.dart';
 import 'src/poppable_screen.dart';
 import 'src/scenario.dart';
+import 'src/touches_scenario.dart';
 
 Map<String, Scenario> _scenarios = <String, Scenario>{
   'animated_color_square': AnimatedColorSquareScenario(window),
@@ -26,6 +28,10 @@ Map<String, Scenario> _scenarios = <String, Scenario>{
   'platform_view_multiple_background_foreground': MultiPlatformViewBackgroundForegroundScenario(window, firstId: 8, secondId: 9),
   'poppable_screen': PoppableScreenScenario(window),
   'platform_view_rotate': PlatformViewScenario(window, 'Rotate Platform View', id: 10),
+  'platform_view_gesture_reject_eager': PlatformViewForTouchIOSScenario(window, 'platform view touch', id: 11, accept: false),
+  'platform_view_gesture_accept': PlatformViewForTouchIOSScenario(window, 'platform view touch', id: 11, accept: true),
+  'platform_view_gesture_reject_after_touches_ended': PlatformViewForTouchIOSScenario(window, 'platform view touch', id: 11, accept: false, rejectUntilTouchesEnded: true),
+  'tap_status_bar' : TouchesScenario(window),
 };
 
 Scenario _currentScenario = _scenarios['animated_color_square'];
